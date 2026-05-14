@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Mini Compiler & Static Code Analyzer"
+version = "1.0.0"
+id = "artifacts/mini-compiler"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23298
+
+[services.development]
+run = "pnpm --filter @workspace/mini-compiler run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/mini-compiler", "run", "build" ]
+publicDir = "artifacts/mini-compiler/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23298"
+BASE_PATH = "/"

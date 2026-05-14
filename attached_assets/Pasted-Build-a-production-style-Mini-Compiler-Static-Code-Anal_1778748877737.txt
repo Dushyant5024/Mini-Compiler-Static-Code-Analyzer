@@ -1,0 +1,155 @@
+Build a production-style “Mini Compiler & Static Code Analyzer” in Python with a modular compiler pipeline architecture. The system should simulate core compiler phases and perform static analysis, optimization checks, and code validation on custom source code files.
+
+Project Goals:
+- Design a lightweight compiler pipeline capable of processing and validating 1,000+ lines of source code.
+- Implement lexical analysis, parsing, syntax tree generation, semantic validation, optimization passes, and static code analysis.
+- Focus on compiler engineering concepts, computational efficiency, redundant operation detection, and maintainability analysis.
+
+Core Features:
+
+1. Lexical Analyzer (Tokenizer)
+- Build a lexer that converts source code into tokens.
+- Support:
+  - Keywords
+  - Identifiers
+  - Operators
+  - Numbers
+  - Strings
+  - Delimiters
+  - Comments
+- Generate token streams with line numbers and token types.
+- Detect invalid tokens and lexical errors.
+
+2. Parser & Syntax Validation
+- Implement a recursive descent parser or LL parser.
+- Validate syntax using grammar rules.
+- Detect:
+  - Missing semicolons
+  - Unbalanced brackets
+  - Invalid expressions
+  - Incorrect assignments
+  - Function declaration errors
+- Produce detailed error logs with line references.
+
+3. Abstract Syntax Tree (AST)
+- Construct an AST from parsed tokens.
+- Support:
+  - Variable declarations
+  - Arithmetic expressions
+  - Conditional statements
+  - Loops
+  - Functions
+- Visualize AST structure using tree representation.
+
+4. Semantic Analysis
+- Implement symbol table management.
+- Detect:
+  - Undefined variables
+  - Duplicate declarations
+  - Type mismatches
+  - Scope violations
+- Track variable usage across scopes.
+
+5. Static Code Analysis Engine
+- Analyze code quality and maintainability.
+- Detect:
+  - Dead code
+  - Unreachable branches
+  - Redundant computations
+  - Infinite loops
+  - Unused variables/functions
+  - Duplicate conditions
+  - Complexity-heavy functions
+- Generate maintainability warnings and optimization suggestions.
+
+6. Optimization Passes
+Implement compiler optimization techniques:
+- Constant folding
+- Constant propagation
+- Dead-code elimination
+- Common subexpression elimination
+- Redundant operation detection
+- Loop optimization
+- Expression simplification
+
+7. Performance & Runtime Analysis
+- Measure:
+  - Parsing time
+  - Optimization time
+  - Tokenization speed
+  - Memory usage
+  - Computational efficiency improvements
+- Compare pre-optimization vs post-optimization execution metrics.
+
+8. Intermediate Representation (IR)
+- Generate a simple intermediate representation of parsed code.
+- Support:
+  - Three-address code
+  - Temporary variables
+  - Basic blocks
+
+9. Reporting System
+Generate detailed reports including:
+- Syntax errors
+- Semantic warnings
+- Optimization statistics
+- Dead code analysis
+- Runtime profiling metrics
+- Maintainability score
+- Compiler pipeline logs
+
+10. Developer Dashboard
+Build a simple dashboard using Streamlit or Flask:
+- Upload source code files
+- View tokens
+- View AST
+- View optimization suggestions
+- Download analysis reports
+- Visualize compiler pipeline stages
+
+Technical Requirements:
+- Language: Python
+- Architecture: Modular compiler pipeline
+- Use OOP principles and clean folder structure
+- Include benchmarking and profiling tools
+- Add test cases for compiler validation
+- Include documentation for grammar rules and optimization passes
+
+Suggested Folder Structure:
+compiler/
+│
+├── lexer/
+├── parser/
+├── semantic/
+├── optimizer/
+├── analyzer/
+├── ir/
+├── utils/
+├── tests/
+├── dashboard/
+└── reports/
+
+Expected Outcomes:
+- Validate and analyze large source files efficiently.
+- Demonstrate compiler construction fundamentals.
+- Showcase static analysis and optimization engineering skills.
+- Improve computational efficiency through optimization passes.
+- Produce measurable performance improvements and maintainability insights.
+
+Additional Advanced Features (Optional):
+- Bytecode simulation
+- Control Flow Graph (CFG)
+- Data Flow Analysis
+- SSA Form
+- JIT-style optimization simulation
+- Multi-language support
+- AI-assisted optimization recommendations
+
+Deliverables:
+- Fully working Python project
+- Modular codebase
+- AST visualizer
+- Optimization engine
+- Static analysis reports
+- README with architecture explanation
+- Benchmark results demonstrating optimization impact

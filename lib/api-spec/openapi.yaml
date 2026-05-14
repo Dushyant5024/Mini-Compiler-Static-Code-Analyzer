@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Mini Compiler & Static Code Analyzer API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: compiler
+    description: Compiler pipeline operations
+  - name: samples
+    description: Sample source code
 paths:
   /healthz:
     get:
@@ -24,6 +27,182 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /compiler/tokenize:
+    post:
+      operationId: tokenize
+      tags: [compiler]
+      summary: Tokenize source code
+      description: Run the lexer and return a token stream with line numbers and types
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SourceInput"
+      responses:
+        "200":
+          description: Token stream
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenizeResult"
+        "400":
+          description: Lexical error
+
+  /compiler/parse:
+    post:
+      operationId: parseCode
+      tags: [compiler]
+      summary: Parse source code and build AST
+      description: Run lexer and recursive-descent parser; return AST and syntax errors
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SourceInput"
+      responses:
+        "200":
+          description: Parse result with AST
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParseResult"
+        "400":
+          description: Syntax error
+
+  /compiler/analyze:
+    post:
+      operationId: analyzeCode
+      tags: [compiler]
+      summary: Run semantic and static analysis
+      description: Perform symbol table management, semantic checks, and static code analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SourceInput"
+      responses:
+        "200":
+          description: Analysis report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResult"
+
+  /compiler/optimize:
+    post:
+      operationId: optimizeCode
+      tags: [compiler]
+      summary: Run optimization passes
+      description: Run constant folding, dead-code elimination, CSE, and other optimization passes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SourceInput"
+      responses:
+        "200":
+          description: Optimization result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OptimizeResult"
+
+  /compiler/compile:
+    post:
+      operationId: compileCode
+      tags: [compiler]
+      summary: Run full compiler pipeline
+      description: Execute all phases - tokenize, parse, semantic analysis, IR generation, optimization, and static analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SourceInput"
+      responses:
+        "200":
+          description: Full compilation report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompileResult"
+
+  /compiler/ir:
+    post:
+      operationId: generateIR
+      tags: [compiler]
+      summary: Generate intermediate representation
+      description: Produce three-address code IR from parsed source
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SourceInput"
+      responses:
+        "200":
+          description: IR output
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IRResult"
+
+  /samples:
+    get:
+      operationId: listSamples
+      tags: [samples]
+      summary: List available sample programs
+      description: Returns a list of built-in sample source code programs for demo purposes
+      responses:
+        "200":
+          description: List of sample programs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SampleProgram"
+
+  /samples/{id}:
+    get:
+      operationId: getSample
+      tags: [samples]
+      summary: Get a specific sample program
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sample program with source code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleProgram"
+        "404":
+          description: Sample not found
+
+  /compiler/stats:
+    get:
+      operationId: getCompilerStats
+      tags: [compiler]
+      summary: Get compiler pipeline performance stats
+      description: Returns aggregated stats about compilation runs including avg tokenization time, parse time, and optimization gains
+      responses:
+        "200":
+          description: Compiler statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompilerStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +213,306 @@ components:
       required:
         - status
 
+    SourceInput:
+      type: object
+      required: [source]
+      properties:
+        source:
+          type: string
+          description: Source code to compile
+        filename:
+          type: ["string", "null"]
+          description: Optional filename for display
+
+    Token:
+      type: object
+      required: [type, value, line, column]
+      properties:
+        type:
+          type: string
+          description: Token type (KEYWORD, IDENTIFIER, NUMBER, STRING, OPERATOR, DELIMITER, COMMENT)
+        value:
+          type: string
+        line:
+          type: integer
+        column:
+          type: integer
+
+    TokenizeResult:
+      type: object
+      required: [tokens, errors, tokenizationTimeMs, tokenCount]
+      properties:
+        tokens:
+          type: array
+          items:
+            $ref: "#/components/schemas/Token"
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompilerError"
+        tokenizationTimeMs:
+          type: number
+        tokenCount:
+          type: integer
+
+    ASTNode:
+      type: object
+      required: [type, value]
+      properties:
+        type:
+          type: string
+        value:
+          type: string
+        line:
+          type: ["integer", "null"]
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/ASTNode"
+
+    ParseResult:
+      type: object
+      required: [ast, errors, parseTimeMs, nodeCount]
+      properties:
+        ast:
+          $ref: "#/components/schemas/ASTNode"
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompilerError"
+        parseTimeMs:
+          type: number
+        nodeCount:
+          type: integer
+
+    SemanticWarning:
+      type: object
+      required: [type, message, line]
+      properties:
+        type:
+          type: string
+          description: Warning type (UNUSED_VARIABLE, UNDEFINED_VARIABLE, TYPE_MISMATCH, SCOPE_VIOLATION, etc.)
+        message:
+          type: string
+        line:
+          type: integer
+        severity:
+          type: string
+          description: error | warning | info
+
+    StaticIssue:
+      type: object
+      required: [type, message, line]
+      properties:
+        type:
+          type: string
+          description: Issue type (DEAD_CODE, INFINITE_LOOP, UNUSED_FUNCTION, DUPLICATE_CONDITION, etc.)
+        message:
+          type: string
+        line:
+          type: integer
+        severity:
+          type: string
+        suggestion:
+          type: ["string", "null"]
+
+    AnalysisResult:
+      type: object
+      required: [semanticWarnings, staticIssues, maintainabilityScore, analysisTimeMs, symbolTable]
+      properties:
+        semanticWarnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/SemanticWarning"
+        staticIssues:
+          type: array
+          items:
+            $ref: "#/components/schemas/StaticIssue"
+        maintainabilityScore:
+          type: number
+          description: 0-100 maintainability score
+        analysisTimeMs:
+          type: number
+        symbolTable:
+          type: array
+          items:
+            $ref: "#/components/schemas/SymbolEntry"
+        complexityScore:
+          type: number
+
+    SymbolEntry:
+      type: object
+      required: [name, type, scope, line]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        scope:
+          type: string
+        line:
+          type: integer
+        used:
+          type: boolean
+
+    OptimizationPass:
+      type: object
+      required: [name, applied, description]
+      properties:
+        name:
+          type: string
+          description: e.g. CONSTANT_FOLDING, DEAD_CODE_ELIMINATION
+        applied:
+          type: boolean
+        description:
+          type: string
+        instancesFound:
+          type: integer
+        estimatedSpeedupPct:
+          type: number
+
+    OptimizeResult:
+      type: object
+      required: [passes, optimizedSource, optimizationTimeMs, totalEstimatedSpeedupPct]
+      properties:
+        passes:
+          type: array
+          items:
+            $ref: "#/components/schemas/OptimizationPass"
+        optimizedSource:
+          type: string
+        optimizationTimeMs:
+          type: number
+        totalEstimatedSpeedupPct:
+          type: number
+        memoryReductionPct:
+          type: number
+
+    IRInstruction:
+      type: object
+      required: [op, result]
+      properties:
+        op:
+          type: string
+          description: Three-address code operation (ASSIGN, ADD, SUB, MUL, DIV, JUMP, LABEL, CALL, etc.)
+        result:
+          type: string
+        arg1:
+          type: ["string", "null"]
+        arg2:
+          type: ["string", "null"]
+        block:
+          type: ["string", "null"]
+
+    IRResult:
+      type: object
+      required: [instructions, blocks, irGenerationTimeMs]
+      properties:
+        instructions:
+          type: array
+          items:
+            $ref: "#/components/schemas/IRInstruction"
+        blocks:
+          type: array
+          items:
+            type: string
+        irGenerationTimeMs:
+          type: number
+
+    CompilerError:
+      type: object
+      required: [phase, message, line]
+      properties:
+        phase:
+          type: string
+          description: lexer | parser | semantic | optimizer
+        message:
+          type: string
+        line:
+          type: integer
+        column:
+          type: ["integer", "null"]
+
+    PipelineStage:
+      type: object
+      required: [name, status, timeMs]
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+          description: success | error | warning | skipped
+        timeMs:
+          type: number
+        itemCount:
+          type: integer
+
+    CompileResult:
+      type: object
+      required: [tokens, ast, analysis, optimization, ir, pipeline, totalTimeMs, errors, maintainabilityScore]
+      properties:
+        tokens:
+          type: array
+          items:
+            $ref: "#/components/schemas/Token"
+        ast:
+          $ref: "#/components/schemas/ASTNode"
+        analysis:
+          $ref: "#/components/schemas/AnalysisResult"
+        optimization:
+          $ref: "#/components/schemas/OptimizeResult"
+        ir:
+          $ref: "#/components/schemas/IRResult"
+        pipeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/PipelineStage"
+        totalTimeMs:
+          type: number
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompilerError"
+        maintainabilityScore:
+          type: number
+
+    SampleProgram:
+      type: object
+      required: [id, name, description, source, category]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        source:
+          type: string
+        category:
+          type: string
+          description: basic | loops | functions | advanced
+
+    CompilerStats:
+      type: object
+      required: [totalRuns, avgTokenizationMs, avgParseMs, avgOptimizationMs, avgMaintainabilityScore, topIssueTypes]
+      properties:
+        totalRuns:
+          type: integer
+        avgTokenizationMs:
+          type: number
+        avgParseMs:
+          type: number
+        avgOptimizationMs:
+          type: number
+        avgMaintainabilityScore:
+          type: number
+        topIssueTypes:
+          type: array
+          items:
+            type: object
+            required: [type, count]
+            properties:
+              type:
+                type: string
+              count:
+                type: integer
